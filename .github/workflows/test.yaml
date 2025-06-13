@@ -64,7 +64,7 @@ jobs:
   build-docker-image:
     name: 🐳 Build Docker Image
     runs-on: ubuntu-latest
-    needs: [integrate-test-inspect, deploy-to-github-pages]
+    needs: integrate-test-inspect
     steps:
       - name: ⬇️ Checkout Kode
         uses: actions/checkout@v4
