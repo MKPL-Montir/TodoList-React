@@ -60,32 +60,6 @@ jobs:
             -Dsonar.host.url=${{ secrets.SONAR_HOST_URL }}
             -Dsonar.javascript.lcov.reportPaths=coverage/lcov.info
 
-  build-docker-image:
-    name: 🐳 Build Docker Image
-    runs-on: ubuntu-latest
-    needs: integrate-test-inspect
-    steps:
-      - name: ⬇️ Checkout Kode
-        uses: actions/checkout@v4
-
-      - name: 🛠️ Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-
-      - name: 🔑 Login ke Docker Hub
-        if: github.event_name == 'push' && github.ref == 'refs/heads/main' && secrets.DOCKERHUB_USERNAME != ''
-        uses: docker/login-action@v3
-        with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
-
-      - name: 🏗️ Build and Push Docker Image
-        uses: docker/build-push-action@v5
-        with:
-          context: .
-          file: ./Dockerfile
-          push: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' && secrets.DOCKERHUB_USERNAME != '' }}
-          tags: ${{ secrets.DOCKERHUB_USERNAME || 'local' }}/todolist-react:latest
-
   deploy-to-github-pages:
     name: 🚀 Deploy ke GitHub Pages (Continuous Delivery/Deployment)
     runs-on: ubuntu-latest
@@ -115,3 +89,31 @@ jobs:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: ./dist
           publish_branch: gh-pages
+
+  build-docker-image:
+    name: 🐳 Build Docker Image
+    runs-on: ubuntu-latest
+    needs: [integrate-test-inspect, deploy-to-github-pages]
+    steps:
+      - name: ⬇️ Checkout Kode
+        uses: actions/checkout@v4
+
+      - name: 🛠️ Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: 🔑 Login ke Docker Hub
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main' && env.DOCKERHUB_USERNAME != ''
+        env:
+          DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: 🏗️ Build and Push Docker Image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./Dockerfile
+          push: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' && env.DOCKERHUB_USERNAME != '' }}
+          tags: ${{ secrets.DOCKERHUB_USERNAME || 'local' }}/todolist-react:latest
