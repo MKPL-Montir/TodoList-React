@@ -16,12 +16,12 @@ jobs:
       - name: ⬇️ Checkout Kode (Continuous Integration)
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0 # Diperlukan untuk analisis SonarQube yang akurat
+          fetch-depth: 0
 
       - name: 🔧 Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20' # Node.js 20 LTS for compatibility
+          node-version: '20'
 
       - name: 📦 Install Dependencies
         run: npm ci
@@ -72,7 +72,7 @@ jobs:
         uses: docker/setup-buildx-action@v3
 
       - name: 🔑 Login ke Docker Hub
-        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main' && secrets.DOCKERHUB_USERNAME != ''
         uses: docker/login-action@v3
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
@@ -83,13 +83,13 @@ jobs:
         with:
           context: .
           file: ./Dockerfile
-          push: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
-          tags: ${{ secrets.DOCKERHUB_USERNAME }}/todolist-react:latest
+          push: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' && secrets.DOCKERHUB_USERNAME != '' }}
+          tags: ${{ secrets.DOCKERHUB_USERNAME || 'local' }}/todolist-react:latest
 
   deploy-to-github-pages:
     name: 🚀 Deploy ke GitHub Pages (Continuous Delivery/Deployment)
     runs-on: ubuntu-latest
-    needs: integrate-test-inspect # Only depends on integrate-test-inspect
+    needs: integrate-test-inspect
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     permissions:
       contents: write
