@@ -2,9 +2,9 @@ name: Continuous Testing
 
 on:
   push:
-    branches: [Testing]
+    branches: [main, Testing]  # Include Testing if you want to keep testing it
   pull_request:
-    branches: [Testing]
+    branches: [main, Testing]  # Include Testing if needed
 
 jobs:
   test:
